@@ -12,7 +12,7 @@
  print the group ID gid_t getgid(void);
  print the hostname: int gethostname(char *name, size_t len);
  print the names of the first 5 entries in the password file:  getpwent();
- print the value of a user-specified environment variable:  getenv();
+ print the value of a user-specified environment variable:  getenv(string env);
  */
 
 #include <iostream>
@@ -34,10 +34,15 @@ private:
     /*Holds the error type, and character array for the host process*/
     int realUserNameError;
     char nameCharacterArray[128];
+
+    /*Holds the error type, and the character error for the login name*/
+    int loginNameError;
+    char loginNameHolder[128];
     
     /**/
 public:
     UserInformation(){
+        loginNameError = getlogin_r(loginNameHolder, sizeof(loginNameHolder));
         realUserNameError = gethostname(nameCharacterArray, sizeof(nameCharacterArray));
         idUserName = getuid();
         groupId = getGroupId();
@@ -50,6 +55,16 @@ public:
     }
     gid_t getGroupId(){
         return groupId;
+    }
+    string getLoginNameHolder(){
+         if(loginNameError >= 0){
+            string result = "";
+            for(int i = 0; i<128; i++){
+                result += loginNameHolder[i];
+            }
+            return result;
+         }
+         return "Something went wrong getting your real user name.";
     }
     
     string getHostName() {
@@ -66,11 +81,10 @@ public:
 int main(int argc, const char * argv[]) {
     UserInformation * userInformation = new UserInformation();
     //fix get the real user name
-    cout << "Your login name is: "<<userInformation->getHostName()<< endl;
+    cout << "Your login name is: "<<userInformation->getLoginNameHolder()<< endl;
     cout << "Your UserID is: " << userInformation->getIduserName() <<endl;
     cout << "Your Group ID is: "<< userInformation->getGroupId()<<endl;
     cout << "Your login name is: "<<userInformation->getHostName()<< endl;
-    
     
     cout << "Thanks for using my program!"<<endl;
     return 0;
